@@ -8,7 +8,7 @@ class SessionType(str, Enum):
     """Enumeration for the type of a course session."""
     LECTURE = "Lecture"
     LAB = "Lab"
-    TUTORIAL = "Tutorial" # Added new type
+    TUTORIAL = "Tutorial"
 
 class DayOfWeek(str, Enum):
     """Enumeration for the days of the week."""
@@ -17,6 +17,11 @@ class DayOfWeek(str, Enum):
     TUESDAY = "Tuesday"
     WEDNESDAY = "Wednesday"
     THURSDAY = "Thursday"
+
+class InstructorRole(str, Enum):
+    """Enumeration for the role of an instructor."""
+    DOCTOR = "Doctor"
+    TEACHING_ASSISTANT = "Teaching Assistant"
 
 # --- Base Models Reflecting Database Tables ---
 
@@ -30,6 +35,7 @@ class Instructor(BaseModel):
     """Represents a single instructor."""
     instructor_id: int = Field(description="Primary key. Unique identifier for the instructor.")
     name: str = Field(description="The full name of the instructor.")
+    role: InstructorRole = Field(description="The role of the instructor (e.g., Doctor or Teaching Assistant).")
 
 class Room(BaseModel):
     """Represents a physical room where classes can be held."""
