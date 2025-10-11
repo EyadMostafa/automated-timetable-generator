@@ -8,6 +8,7 @@ class SessionType(str, Enum):
     """Enumeration for the type of a course session."""
     LECTURE = "Lecture"
     LAB = "Lab"
+    TUTORIAL = "Tutorial" # Added new type
 
 class DayOfWeek(str, Enum):
     """Enumeration for the days of the week."""
@@ -23,7 +24,7 @@ class Course(BaseModel):
     """Represents a single, schedulable course or lab session."""
     course_id: int = Field(description="Primary key. Unique identifier for the course session.")
     course_name: str = Field(description="The full name of the course (e.g., 'Introduction to Programming').")
-    type: SessionType = Field(description="The type of the session, either a Lecture or a Lab.")
+    type: SessionType = Field(description="The type of the session: Lecture, Lab, or Tutorial.")
 
 class Instructor(BaseModel):
     """Represents a single instructor."""
@@ -37,7 +38,7 @@ class Room(BaseModel):
     capacity: int = Field(description="The maximum number of students the room can accommodate.")
 
 class TimeSlot(BaseModel):
-    """Represents a single, discrete time slot in the weekly schedule."""
+    """Represents a single, 1.5-hour discrete time slot in the weekly schedule."""
     time_slot_id: int = Field(description="Primary key. Unique identifier for the time slot.")
     day: DayOfWeek = Field(description="The day of the week for this time slot.")
     start_time: time = Field(description="The starting time of the slot.")
@@ -50,7 +51,6 @@ class Section(BaseModel):
     student_count: int = Field(description="The number of students in this section.")
 
     class Config:
-        # Pydantic v2 feature for making the model hashable for use in sets/dicts
         frozen = True
 
 class Curriculum(BaseModel):
