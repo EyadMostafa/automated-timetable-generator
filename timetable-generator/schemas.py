@@ -9,6 +9,7 @@ class SessionType(str, Enum):
     LECTURE = "Lecture"
     LAB = "Lab"
     TUTORIAL = "Tutorial"
+    PROJECT = "Project"
 
 class DayOfWeek(str, Enum):
     """Enumeration for the days of the week."""
@@ -20,39 +21,41 @@ class DayOfWeek(str, Enum):
 
 class InstructorRole(str, Enum):
     """Enumeration for the role of an instructor."""
+    PROFESSOR = "Professor"
     DOCTOR = "Doctor"
     TEACHING_ASSISTANT = "Teaching Assistant"
 
 # --- Base Models Reflecting Database Tables ---
 
 class Course(BaseModel):
-    """Represents a single, schedulable course or lab session."""
-    course_id: int = Field(description="Primary key. Unique identifier for the course session.")
-    course_name: str = Field(description="The full name of the course (e.g., 'Introduction to Programming').")
-    type: SessionType = Field(description="The type of the session: Lecture, Lab, or Tutorial.")
+    """Represents a single, unique, schedulable session (e.g., the Lecture for CS101)."""
+    course_id: str = Field(description="The unique identifier for the course subject (e.g., 'CS101').")
+    course_name: str = Field(description="The name of the course subject (e.g., 'Introduction to Programming').")
+    type: SessionType = Field(description="The specific type of this session: Lecture, Lab, or Tutorial.")
 
 class Instructor(BaseModel):
-    """Represents a single instructor."""
+    """Represents a single instructor, including their role and qualifications."""
     instructor_id: int = Field(description="Primary key. Unique identifier for the instructor.")
     name: str = Field(description="The full name of the instructor.")
-    role: InstructorRole = Field(description="The role of the instructor (e.g., Doctor or Teaching Assistant).")
+    role: InstructorRole = Field(description="The role of the instructor.")
+    qualifications: List[str] = Field(description="A list of course_ids the instructor is qualified to teach.")
 
 class Room(BaseModel):
     """Represents a physical room where classes can be held."""
-    room_id: int = Field(description="Primary key. Unique identifier for the room.")
-    type: SessionType = Field(description="The type of room, which must match the course type.")
+    room_id: str = Field(description="Primary key. Unique identifier for the room (e.g., 'B1-101').")
+    type: SessionType = Field(description="The type of room, which must match the course offering type.")
     capacity: int = Field(description="The maximum number of students the room can accommodate.")
 
 class TimeSlot(BaseModel):
     """Represents a single, 1.5-hour discrete time slot in the weekly schedule."""
-    time_slot_id: int = Field(description="Primary key. Unique identifier for the time slot.")
+    time_slot_id: str = Field(description="Primary key. Unique identifier for the time slot (e.g., 'sun_0900_1030').")
     day: DayOfWeek = Field(description="The day of the week for this time slot.")
     start_time: time = Field(description="The starting time of the slot.")
     end_time: time = Field(description="The ending time of the slot.")
 
 class Section(BaseModel):
     """Represents a specific group of students. The primary key is a composite of section_id and year."""
-    section_id: int = Field(description="Part of the composite primary key. The identifier for the section within its year (1-12).")
+    section_id: int = Field(description="Part of the composite primary key. The identifier for the section within its year (1-9).")
     year: int = Field(description="Part of the composite primary key. The academic year of the section (1-4).")
     student_count: int = Field(description="The number of students in this section.")
 
@@ -60,15 +63,9 @@ class Section(BaseModel):
         frozen = True
 
 class Curriculum(BaseModel):
-    """Represents the rule that a specific year must take a specific course."""
-    curriculum_id: int = Field(description="Primary key. Unique ID for this curriculum rule.")
-    course_id: int = Field(description="Foreign key linking to the Course.")
-    year: int = Field(description="The academic year this rule applies to.")
-
-class InstructorQualification(BaseModel):
-    """Represents the rule that an instructor is qualified to teach a specific course."""
-    instructor_id: int = Field(description="Foreign key linking to the Instructor.")
-    course_id: int = Field(description="Foreign key linking to the Course.")
+    """Links a year to the courses they must take. The primary key is a composite of course_id and year."""
+    course_id: str = Field(description="Part of the composite primary key. Foreign key linking to the Course.")
+    year: int = Field(description="Part of the composite primary key. The academic year this rule applies to.")
 
 # --- A container model to hold all the loaded data ---
 
@@ -80,5 +77,4 @@ class TimetableData(BaseModel):
     timeslots: List[TimeSlot]
     sections: List[Section]
     curriculum: List[Curriculum]
-    qualifications: List[InstructorQualification]
 
