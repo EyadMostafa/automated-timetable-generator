@@ -2,6 +2,7 @@ from typing import Dict, Tuple, FrozenSet, Optional
 from schemas import (Course, Section, TimeSlot, Room, Instructor, SessionType, Solution)
 
 # --- Type Aliases for Clarity in the Solver ---
+
 Variable = Tuple[Course, FrozenSet[Section]]
 Domain = Tuple[TimeSlot, Optional[Room], Optional[Instructor]]
 
@@ -23,33 +24,26 @@ def is_consistent(
     variable: Variable,
     domain: Domain,
     assignment: Assignment
-) -> bool:
+) -> Tuple[bool, Optional[str]]:
     """
     The main orchestrator for hard constraint checks.
 
     This function is called by the solver for each potential assignment to see if it
     conflicts with any of the already placed classes in the current 'assignment'.
-
-    Args:
-        variable: The variable (Course + Sections) being assigned.
-        domain: The domain value (TimeSlot, Room, Instructor) being assigned to it.
-        assignment: The current partial assignment of other variables.
-
-    Returns:
-        True if the proposed assignment is consistent (no conflicts), False otherwise.
+    True if the proposed assignment is consistent (no conflicts), False otherwise.
     """
     if _check_project_day_conflict(variable, domain, assignment):
-        return False
+        return (False, "Project Conflict")
 
     for existing_variable, existing_domain in assignment.items():
         if _check_instructor_conflict(domain, existing_domain):
-            return False
+            return (False, "Instructor Conflict")
         if _check_room_conflict(domain, existing_domain):
-            return False
+            return (False, "Room Conflict")
         if _check_section_conflict(variable, domain, existing_variable, existing_domain):
-            return False
-            
-    return True
+            return (False, "Section Conflict")
+        
+    return (True, None)
 
 def _check_instructor_conflict(proposed_domain: Domain, existing_domain: Domain) -> bool:
     """
@@ -138,12 +132,6 @@ def calculate_solution_score(solution: Solution) -> float:
 
     It calls all the individual penalty functions and sums their results.
     The lower the score, the better the timetable.
-
-    Args:
-        solution: A complete Solution object containing the final schedule.
-
-    Returns:
-        A float representing the total penalty score.
     """
     pass
 

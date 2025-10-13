@@ -89,6 +89,7 @@ def _parse_sections(df: pd.DataFrame) -> List[Section]:
     for _, row in df.iterrows():
         section = Section(
             section_id=row['section_id'],
+            group_number=row['group_number'],
             year=row['year'],
             student_count=row['student_count']
         )
@@ -159,7 +160,7 @@ def load_timetable_data_from_excel(file_path: str) -> TimetableData:
 
 if __name__ == '__main__':
     try:
-        data = load_timetable_data_from_excel('Tables.xlsx')
+        data = load_timetable_data_from_excel('./Tables.xlsx')
         print("Successfully loaded timetable data!")
         print(f"Total individual course sessions to schedule: {len(data.courses)}")
     except ValueError as e:

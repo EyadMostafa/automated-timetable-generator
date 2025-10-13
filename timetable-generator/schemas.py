@@ -33,6 +33,9 @@ class Course(BaseModel):
     course_name: str = Field(description="The name of the course subject (e.g., 'Introduction to Programming').")
     type: SessionType = Field(description="The specific type of this session: Lecture, Lab, or Tutorial.")
 
+    class Config:
+        frozen = True
+
 class Instructor(BaseModel):
     """Represents a single instructor, including their role and qualifications."""
     instructor_id: int = Field(description="Primary key. Unique identifier for the instructor.")
@@ -56,6 +59,7 @@ class TimeSlot(BaseModel):
 class Section(BaseModel):
     """Represents a specific group of students. The primary key is a composite of section_id and year."""
     section_id: int = Field(description="Part of the composite primary key. The identifier for the section within its year (1-9).")
+    group_number: int = Field(description="The parent group this section belongs to (1-3).")
     year: int = Field(description="Part of the composite primary key. The academic year of the section (1-4).")
     student_count: int = Field(description="The number of students in this section.")
 
