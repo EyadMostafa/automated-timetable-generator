@@ -183,12 +183,10 @@ class CSPSolver:
         """
         remaining_unscheduled_sections = sum(len(s) for s in unscheduled_sections_map.values())
         print(f"{remaining_unscheduled_sections} unscheduled section-classes remaining")
-        # print(f"{'  ' * depth}Depth {depth}: Trying to solve with {sum(len(s) for s in unscheduled_sections_map.values())} unscheduled section-classes remaining...")
         if all(not sections for sections in unscheduled_sections_map.values()):
                 return assignment
 
         course, domains = self._select_next_course_to_schedule(unscheduled_sections_map)
-        # print(f"{'  ' * depth}--> Selected course: {course.course_id} ({course.type}) with {len(domains)} possible domains.")
 
         if not domains: return None
 
@@ -212,8 +210,6 @@ class CSPSolver:
 
                     result = self._backtrack(new_assignment, new_unscheduled_sections_map, depth + 1)
                     if result: return result
-                # else: print(f"{'  ' * depth}      - REJECTED: {reason}")
-                # else: print(depth)
         return None
 
     def _format_solution(self, assignment: Assignment) -> Solution:
