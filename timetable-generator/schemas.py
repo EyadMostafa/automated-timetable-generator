@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from enum import Enum
-from typing import List
+from typing import List, Optional
 from datetime import time
 
 # Using Python's standard Enum for controlled vocabularies
@@ -43,12 +43,12 @@ class Instructor(BaseModel):
 class Room(BaseModel):
     """Represents a physical room where classes can be held."""
     room_id: str = Field(description="Primary key. Unique identifier for the room (e.g., 'B1-101').")
-    type: SessionType = Field(description="The type of room, which must match the course offering type.")
+    types: List[SessionType] = Field(description="The type of room, which must match the course offering type.")
     capacity: int = Field(description="The maximum number of students the room can accommodate.")
 
 class TimeSlot(BaseModel):
     """Represents a single, 1.5-hour discrete time slot in the weekly schedule."""
-    time_slot_id: str = Field(description="Primary key. Unique identifier for the time slot (e.g., 'sun_0900_1030').")
+    timeslot_id: str = Field(description="Primary key. Unique identifier for the time slot (e.g., 'sun_0900_1030').")
     day: DayOfWeek = Field(description="The day of the week for this time slot.")
     start_time: time = Field(description="The starting time of the slot.")
     end_time: time = Field(description="The ending time of the slot.")
@@ -64,17 +64,31 @@ class Section(BaseModel):
 
 class Curriculum(BaseModel):
     """Links a year to the courses they must take. The primary key is a composite of course_id and year."""
-    course_id: str = Field(description="Part of the composite primary key. Foreign key linking to the Course.")
     year: int = Field(description="Part of the composite primary key. The academic year this rule applies to.")
+    course_id: str = Field(description="Part of the composite primary key. Foreign key linking to the Course.")
 
 # --- A container model to hold all the loaded data ---
 
 class TimetableData(BaseModel):
-    """A top-level model to hold all the parsed and validated data for the timetable problem."""
-    courses: List[Course]
-    instructors: List[Instructor]
-    rooms: List[Room]
-    timeslots: List[TimeSlot]
-    sections: List[Section]
-    curriculum: List[Curriculum]
+    """A top-level model to hold all the parsed and validated data."""
+    courses: List[Course] = Field(...)
+    instructors: List[Instructor] = Field(...)
+    rooms: List[Room] = Field(...)
+    timeslots: List[TimeSlot] = Field(...)
+    sections: List[Section] = Field(...)
+    curriculum: List[Curriculum] = Field(...)
 
+# --- Models for the Solver's Output ---
+
+class ScheduledClass(BaseModel):
+    """Represents a single, fully scheduled class in the final timetable."""
+    course: Course = Field(...)
+    timeslot: TimeSlot = Field(...)
+    room: Optional[Room] = Field(None, description="The room assigned. Null for 'Project' type.")
+    instructor: Optional[Instructor] = Field(None, description="The instructor assigned. Null for 'Project' type.")
+    sections: List[Section] = Field(..., description="The list of student sections attending this class.")
+
+class Solution(BaseModel):
+    """The complete timetable solution, represented as a flat list of scheduled classes for easy processing."""
+    schedule: List[ScheduledClass]
+    score: float = Field(0.0)
