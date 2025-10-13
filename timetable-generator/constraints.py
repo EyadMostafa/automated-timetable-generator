@@ -1,8 +1,3 @@
-"""
-This module contains the business logic for the timetable's hard constraints.
-These functions are used by the backtracking solver to determine if a potential
-assignment is valid by checking for absolute, unbreakable rules.
-"""
 from typing import Dict, Tuple, FrozenSet, Optional
 from schemas import (Course, Section, TimeSlot, Room, Instructor, SessionType, Solution)
 
