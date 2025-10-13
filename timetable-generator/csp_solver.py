@@ -193,9 +193,9 @@ class CSPSolver:
         sections_to_schedule = unscheduled_sections_map[course]
             
         for domain in domains:
-            if remaining_unscheduled_sections == 46:
-                print(f"--- Probing Depth  {remaining_unscheduled_sections} for course {course.course_id} ({course.type}) ---")
-                print(f"    Trying Domain: {domain[DOM_TIMESLOT].timeslot_id}, Room: {domain[DOM_ROOM].room_id if domain[DOM_ROOM] else 'None'}, Room: {domain[DOM_INSTRUCTOR].name if domain[DOM_INSTRUCTOR] else 'None'}")
+            # if remaining_unscheduled_sections == 46:
+                # print(f"--- Probing Depth  {remaining_unscheduled_sections} for course {course.course_id} ({course.type}) ---")
+                # print(f"    Trying Domain: {domain[DOM_TIMESLOT].timeslot_id}, Room: {domain[DOM_ROOM].room_id if domain[DOM_ROOM] else 'None'}, Room: {domain[DOM_INSTRUCTOR].name if domain[DOM_INSTRUCTOR] else 'None'}")
             for section_group in self._form_valid_groups(sections_to_schedule, domain[DOM_ROOM]):
 
                 variable: Variable = (course, section_group)
@@ -237,6 +237,6 @@ if __name__ == '__main__':
        solution = solver.solve()
        if solution:
            print("Solution Found!")
-           Path('./timetable_json.json').write_text(solution.model_dump_json(indent=2))
+           Path('./timetable.json').write_text(solution.model_dump_json(indent=2))
        else:
            print("No solution could be found that satisfies all hard constraints.")
