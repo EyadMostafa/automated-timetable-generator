@@ -1,7 +1,8 @@
 from typing import Dict, Tuple, FrozenSet, Optional
-from schemas import (Course, Section, TimeSlot, Room, Instructor, SessionType, Solution)
+from schemas import *
+from statistics import stdev
 
-# --- Type Aliases for Clarity in the Solver ---
+# --- Type Aliases ---
 
 Variable = Tuple[Course, FrozenSet[Section]]
 Domain = Tuple[TimeSlot, Optional[Room], Optional[Instructor]]
@@ -17,6 +18,18 @@ VAR_SECTIONS = 1
 DOM_TIMESLOT = 0
 DOM_ROOM = 1
 DOM_INSTRUCTOR = 2
+
+SLOT_ORDER = {
+    time(9, 0): 0,
+    time(10, 45): 1,
+    time(12, 30): 2,
+    time(14, 15): 3 
+}
+
+# --- Pelaties for Soft Costraints Scoring ---
+
+_GAP_PENALTY = 5.0
+_UNDESIRABLE_SLOT_PENALTY = 3.0
 
 # --- Hard Constraint Checking ---
 
@@ -126,35 +139,65 @@ def _check_project_day_conflict(
 
 # --- Soft Constraint Scoring ---
 
-def calculate_solution_score(solution: Solution) -> float:
+def calculate_solution_score(schedule: List[ScheduledClass]) -> float:
     """
     The main orchestrator for scoring a complete, valid solution.
-
-    It calls all the individual penalty functions and sums their results.
-    The lower the score, the better the timetable.
     """
-    pass
+    score = 0.0
 
+    section_timeslot_map: Dict[Tuple[int, int], List[TimeSlot]] = {}
+    for cls in schedule:
+        for section in cls.sections:
+            section_key = (section.year, section.section_id)
+            section_timeslot_map.setdefault(section_key, []).append(cls.timeslot)
 
-def _calculate_student_gap_penalty(solution: Solution) -> float:
+    score += _calculate_student_gap_penalty(section_timeslot_map)
+    score += _calculate_undesirable_slot_penalty(schedule)
+    score += _calculate_distribution_penalty(section_timeslot_map)
+
+    return score
+
+def _calculate_student_gap_penalty(section_timeslot_map: Dict[Tuple[int, int], List[TimeSlot]]) -> float:
     """
     Calculates the total penalty for all gaps in student schedules.
-    A gap is an empty time slot between two classes for the same section on the same day.
     """
-    pass
+    score = 0.0
+    for _, timeslots in section_timeslot_map.items():
+        day_grouping: Dict[DayOfWeek, List[TimeSlot]] = {}
+        for ts in timeslots:
+            day_grouping.setdefault(ts.day, []).append(ts)
 
+        for _, daily_timeslots in day_grouping.items():
+            if len(daily_timeslots) < 2: continue
+            daily_timeslots.sort(key=lambda ts: ts.start_time)
+            slot_indices = [SLOT_ORDER[ts.start_time] for ts in daily_timeslots]
 
-def _calculate_undesirable_slot_penalty(solution: Solution) -> float:
-    """
-    Calculates the penalty for scheduling classes in undesirable time slots
-    (e.g., the first or last slot of the day).
-    """
-    pass
+            for i in range(len(slot_indices) - 1):
+                gap_size = (slot_indices[i+1] - slot_indices[i]) - 1
+                if gap_size > 0:
+                    score += _GAP_PENALTY * gap_size
+    return score
 
+def _calculate_undesirable_slot_penalty(schedule: List[ScheduledClass]) -> float:
+    """
+    Calculates the penalty for scheduling classes in the first or last slot of the day.
+    """
+    first_last_slots_count = sum([1 for cls in schedule if SLOT_ORDER.get(cls.timeslot.start_time) in [0, 3]])
+    return first_last_slots_count * _UNDESIRABLE_SLOT_PENALTY
 
-def _calculate_distribution_penalty(solution: Solution) -> float:
+def _calculate_distribution_penalty(section_timeslot_map: Dict[Tuple[int, int], List[TimeSlot]]) -> float:
     """
-    Calculates the penalty for uneven distribution of classes across the week for sections.
-    Uses the standard deviation of classes per day for each section.
+    Calculates the penalty for uneven distribution of classes across the week.
     """
-    pass
+    score = 0.0
+    for _, timeslots in section_timeslot_map.items():
+        daily_counts = {day: 0 for day in DayOfWeek}
+        for ts in timeslots:
+            daily_counts[ts.day] += 1
+        
+        class_counts_per_day = list(daily_counts.values())
+        if len(class_counts_per_day) < 2: continue
+
+        unbalance_penalty = stdev(class_counts_per_day)
+        score += unbalance_penalty
+    return score
