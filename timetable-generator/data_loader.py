@@ -107,15 +107,17 @@ def _parse_curriculum(df: pd.DataFrame) -> List[Curriculum]:
         curriculum.append(curr)
     return curriculum
 
-def load_timetable_data_from_excel(file_path: str) -> TimetableData:
+def load_timetable_data_from_excel(file_path: Any) -> TimetableData:
     """
     Main public function to read all timetable data from an Excel file,
     parse and validate it, and return a single TimetableData object.
     """
     try:
-        file_path_obj = Path(file_path).expanduser()
-        if not file_path_obj.exists():
-            raise FileNotFoundError(f'Fatal Error: provided file path {file_path_obj} does not exist.')
+        file_path_obj = file_path
+        if type(file_path) == str:
+            file_path_obj = Path(file_path).expanduser()
+            if not file_path_obj.exists():
+                raise FileNotFoundError(f'Fatal Error: provided file path {file_path_obj} does not exist.')
         
         sheets = pd.read_excel(file_path_obj, sheet_name=None)
 

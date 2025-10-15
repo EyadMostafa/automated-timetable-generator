@@ -3,7 +3,12 @@ from enum import Enum
 from typing import List, Optional
 from datetime import time
 
-# Using Python's standard Enum for controlled vocabularies
+
+class SolverMode(str, Enum):
+    """Enumeration for the solver's operational mode."""
+    FIND_FIRST = "Find First Solution"
+    OPTIMIZE = "Optimize for Best Solution"
+
 class SessionType(str, Enum):
     """Enumeration for the type of a course session."""
     LECTURE = "Lecture"
@@ -24,6 +29,11 @@ class InstructorRole(str, Enum):
     PROFESSOR = "Professor"
     DOCTOR = "Doctor"
     TEACHING_ASSISTANT = "Teaching Assistant"
+
+class Aliases(str, Enum):
+    PROFESSOR = "Prof."
+    DOCTOR = "Dr."
+    TEACHING_ASSISTANT = "TA."
 
 # --- Base Models Reflecting Database Tables ---
 
