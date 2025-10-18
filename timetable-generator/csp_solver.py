@@ -128,7 +128,7 @@ class CSPSolver:
             return []
 
         return [(ts, room, instructor) for ts in self.data.timeslots for room in valid_rooms for instructor in valid_instructors]
-
+    
     def _select_next_course_to_schedule(self, unscheduled_sections_map: Dict[Course, FrozenSet[Section]]) -> Optional[Tuple[Course, List[Domain]]]:
         """
         Selects the next course to schedule using the MRV heuristic.

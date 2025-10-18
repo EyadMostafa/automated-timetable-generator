@@ -34,6 +34,9 @@ class Aliases(str, Enum):
     PROFESSOR = "Prof."
     DOCTOR = "Dr."
     TEACHING_ASSISTANT = "TA."
+    
+    def __str__(self):
+        return self.value
 
 # --- Base Models Reflecting Database Tables ---
 
