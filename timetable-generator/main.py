@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📅 Automated Timetable Generator")
+st.title("Automated Timetable Generator")
 st.markdown("""
 <style>
 /* This targets all <label> elements to make them larger */
@@ -29,7 +29,7 @@ table {
 """, unsafe_allow_html=True)
 
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.header("Configuration")
     
     uploaded_file = st.file_uploader(
         "Upload your Excel data file",
@@ -66,7 +66,7 @@ if generate_button:
                 solution = solver.solve(timeout_seconds=timeout)
 
                 if solution:
-                    st.success("🎉 Timetable Generated Successfully!")
+                    st.success("Timetable Generated Successfully!")
                     st.session_state['timetable_data'] = timetable_data
                     st.session_state['solution'] = solution
                 else:
@@ -82,7 +82,7 @@ if 'solution' in st.session_state:
     solution = st.session_state['solution']
     timetable_data = st.session_state['timetable_data']
 
-    st.header("🔍 Filter and View Timetables")
+    st.header("Filter and View Timetables")
     st.info(f"Displaying solution with score: **{solution.score:.2f}**")
 
     col1, col2, col3, col4 = st.columns(4)
