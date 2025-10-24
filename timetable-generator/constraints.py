@@ -26,7 +26,7 @@ SLOT_ORDER = {
     time(14, 15): 3 
 }
 
-# --- Pelaties for Soft Costraints Scoring ---
+# --- Penalties for Soft Constraints Scoring ---
 
 _GAP_PENALTY = 5.0
 _UNDESIRABLE_SLOT_PENALTY = 3.0
