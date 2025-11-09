@@ -91,6 +91,7 @@ def _parse_sections(df: pd.DataFrame) -> List[Section]:
             section_id=row['section_id'],
             group_number=row['group_number'],
             year=row['year'],
+            major=row['major'],
             student_count=row['student_count']
         )
         sections.append(section)
@@ -102,6 +103,7 @@ def _parse_curriculum(df: pd.DataFrame) -> List[Curriculum]:
     for _, row in df.iterrows():
         curr = Curriculum(
             year=row['year'],
+            major=row['major'],
             course_id=row['course_id']
         )
         curriculum.append(curr)

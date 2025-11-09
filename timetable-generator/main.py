@@ -4,12 +4,14 @@ from data_loader import load_timetable_data_from_excel
 from csp_solver import CSPSolver
 from display_utils import format_solution_for_display
 
+# --- Page Configuration ---
 st.set_page_config(
     page_title="Automated Timetable Generator",
     page_icon="📅",
     layout="wide"
 )
 
+# --- Title and Custom Styles ---
 st.title("📅 Automated Timetable Generator")
 st.markdown("""
 <style>
@@ -17,7 +19,7 @@ st.markdown("""
 label {
     font-size: 1.1rem !important;
 }
-/* This targets the <h2> header specifically inside the sidebar */
+/* This targets the <h2> header inside the sidebar */
 section[data-testid="stSidebar"] h2 {
     font-size: 1.5rem !important;
 }
@@ -28,6 +30,7 @@ table {
 </style>
 """, unsafe_allow_html=True)
 
+# --- Sidebar for User Inputs ---
 with st.sidebar:
     st.header("⚙️ Configuration")
     
@@ -57,6 +60,7 @@ with st.sidebar:
 
     generate_button = st.button("Generate Timetable", type="primary")
 
+# --- Main Solver Logic ---
 if generate_button:
     if uploaded_file:
         with st.spinner(f"Running solver in '{solver_mode.value}' mode... This may take a moment."):
@@ -66,7 +70,7 @@ if generate_button:
                 solution = solver.solve(timeout_seconds=timeout)
 
                 if solution:
-                    st.success("🎉 Timetable Generated Successfully!")
+                    st.success("Timetable Generated Successfully!")
                     st.session_state['timetable_data'] = timetable_data
                     st.session_state['solution'] = solution
                 else:
@@ -78,6 +82,7 @@ if generate_button:
     else:
         st.warning("Please upload your Excel data file first.")
 
+# --- Display Area ---
 if 'solution' in st.session_state:
     solution = st.session_state['solution']
     timetable_data = st.session_state['timetable_data']
@@ -85,6 +90,7 @@ if 'solution' in st.session_state:
     st.header("🔍 Filter and View Timetables")
     st.info(f"Displaying solution with score: **{solution.score:.2f}**")
 
+    # --- Filter Widgets ---
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         instructor_names = ["All"] + sorted(list(set(inst.name for inst in timetable_data.instructors)))
@@ -93,33 +99,28 @@ if 'solution' in st.session_state:
         years = ["All"] + sorted(list(set(sec.year for sec in timetable_data.sections)))
         selected_year = st.selectbox("Filter by Year", options=years)
     with col3:
-        section_ids = ["All"] + sorted(list(set(sec.section_id for sec in timetable_data.sections)))
-        selected_section = st.selectbox("Filter by Section", options=section_ids)
+        section_options = ["All"] + sorted(
+            [f"Y{s.year}-S{s.section_id}-{s.major.value}" for s in timetable_data.sections],
+            key=lambda x: (int(x.split('-')[0][1:]), int(x.split('-')[1][1:]))
+        )
+        selected_section_str = st.selectbox("Filter by Section", options=section_options)
     with col4:
-        rooms = ["All"] + (list(set(room.room_id for room in timetable_data.rooms)))
+        rooms = ["All"] + sorted(list(set(room.room_id for room in timetable_data.rooms)))
         selected_room = st.selectbox("Filter by Room", options=rooms)
 
+    # --- On-the-fly Filtering Logic ---
     filtered_schedule = solution.schedule
     if selected_instructor != "All":
-        filtered_schedule = [
-            cls for cls in filtered_schedule 
-            if cls.instructor and cls.instructor.name == selected_instructor
-        ]
+        filtered_schedule = [cls for cls in filtered_schedule if cls.instructor and cls.instructor.name == selected_instructor]
     if selected_year != "All":
-        filtered_schedule = [
-            cls for cls in filtered_schedule 
-            if any(sec.year == selected_year for sec in cls.sections)
-        ]
-    if selected_section != "All":
-        filtered_schedule = [
-            cls for cls in filtered_schedule
-            if any(sec.section_id == selected_section for sec in cls.sections)
-        ]
+        filtered_schedule = [cls for cls in filtered_schedule if any(sec.year == selected_year for sec in cls.sections)]
+    if selected_section_str != "All":
+        sel_year_str, sel_sec_str, _ = selected_section_str.split('-')
+        sel_year = int(sel_year_str[1:])
+        sel_sec_id = int(sel_sec_str[1:])
+        filtered_schedule = [cls for cls in filtered_schedule if any(s.year == sel_year and s.section_id == sel_sec_id for s in cls.sections)]
     if selected_room != "All":
-        filtered_schedule = [
-            cls for cls in filtered_schedule
-            if cls.room and cls.room.room_id == selected_room 
-        ]
+        filtered_schedule = [cls for cls in filtered_schedule if cls.room and cls.room.room_id == selected_room]
     
     filtered_schedule_data = [cls.model_dump() for cls in filtered_schedule]
     filtered_solution = Solution(schedule=filtered_schedule_data, score=solution.score)
@@ -129,16 +130,24 @@ if 'solution' in st.session_state:
     if not group_timetables:
         st.warning("No classes match the current filter criteria.")
     else:
-        for (year, group), timetable_df in sorted(group_timetables.items()):
-            if (selected_year == "All" or year == selected_year):
-                st.subheader(f"Year {year}, Group {group}")
+        # --- THIS IS THE FIX ---
+        # Unpack the new 3-element key (year, group, major)
+        for (year, group, major), timetable_df in sorted(group_timetables.items()):
+            if selected_year == "All" or year == selected_year:
+                # Use the new 'major' variable in the subheader
+                st.subheader(f"Year {year}, Group {group} (Major: {major.upper()})")
                 st.markdown(timetable_df.to_html(escape=False), unsafe_allow_html=True)
                 st.write("---")
     
     st.download_button(
         label="Download Full Timetable as JSON",
         data=solution.model_dump_json(indent=2),
-        file_name="timetable_full.json",
+        file_name="timetable.json",
         mime="application/json"
     )
+
+
+# CNC 413	Digital Forensics	Lecture,Lab,Tutorial
+# CSC 415	New Trends in Computer Science	Lecture,Lab,Tutorial
+
 
