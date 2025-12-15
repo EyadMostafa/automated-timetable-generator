@@ -183,9 +183,9 @@ class CSPSolver:
                 return None
         
         selection = self._select_next_course_to_schedule(unscheduled_sections_map)
-        if selection is None: 
-            print("DEBUG: No more courses to select, but not complete. Should not happen.")
-            return None
+        # if selection is None: 
+        #     print("DEBUG: No more courses to select, but not complete. Should not happen.")
+        #     return None
         
         course, domains = selection
         
@@ -193,10 +193,7 @@ class CSPSolver:
         print(f"--> Selected course: {course.course_id} ({course.type}). Found {len(domains)} possible domains.")
         # --- END PROBE ---
 
-        if not domains: 
-            # --- DEBUGGING PROBE ---
-            print(f"!!! DEAD END: Course {course.course_id} ({course.type}) has ZERO valid domains. The problem is over-constrained.")
-            # --- END PROBE ---
+        if not domains:
             return None
             
         sections_to_schedule = unscheduled_sections_map[course]

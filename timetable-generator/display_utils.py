@@ -2,37 +2,26 @@ import pandas as pd
 from schemas import Solution, DayOfWeek, InstructorRole, Aliases
 from typing import Dict, Tuple
 from datetime import time
+from constraints import SLOT_ORDER
 
-# This dictionary maps the full role to its shorter alias for display
 ROLE_TO_ALIAS = {
     InstructorRole.PROFESSOR: Aliases.PROFESSOR,
     InstructorRole.DOCTOR: Aliases.DOCTOR,
     InstructorRole.TEACHING_ASSISTANT: Aliases.TEACHING_ASSISTANT,
 }
 
-# This dictionary defines the correct chronological order of time slots
-SLOT_ORDER = {
-    time(9, 0): 0,
-    time(10, 45): 1,
-    time(12, 30): 2,
-    time(14, 15): 3
-}
-
 def format_solution_for_display(solution: Solution) -> Dict[Tuple[int, int, str], pd.DataFrame]:
     """
-    Transforms the flat schedule from the solver into a dictionary of pivot tables
-    (grids), one for each student group, now including the major.
+    Transforms the flat schedule into pivot tables.
+    Shows ALL classes in a slot to reveal conflicts.
     """
-    
     processed_data = []
     for cls in solution.schedule:
         for section in cls.sections:
-            
             section_ids = sorted(list(set(s.section_id for s in cls.sections)))
-            
             alias = ROLE_TO_ALIAS.get(cls.instructor.role, "") if cls.instructor else ""
             
-            cell_content = (
+            single_class_html = (
                 f"<b>{cls.course.course_name} ({cls.course.course_id}) ({cls.course.type.value})</b><br>"
                 f"{alias} {cls.instructor.name if cls.instructor else 'N/A'}<br>"
                 f"{cls.room.room_id if cls.room else 'N/A'}<br>"
@@ -46,7 +35,7 @@ def format_solution_for_display(solution: Solution) -> Dict[Tuple[int, int, str]
                 "day": cls.timeslot.day.value,
                 "time_str": f"{cls.timeslot.start_time.strftime('%I:%M %p')} - {cls.timeslot.end_time.strftime('%I:%M %p')}",
                 "sort_key": SLOT_ORDER.get(cls.timeslot.start_time, 99),
-                "content": cell_content
+                "content": single_class_html
             }
             processed_data.append(record)
 
@@ -68,12 +57,11 @@ def format_solution_for_display(solution: Solution) -> Dict[Tuple[int, int, str]
             index='time_str', 
             columns='day',
             values='content',
-            aggfunc='first',
+            aggfunc=lambda x: '<hr style="margin: 5px 0; border-top: 1px dashed #ccc;">'.join(x),
             observed=False 
         ).fillna('')
+
         pivot_table = pivot_table.reindex(columns=day_order).fillna('')
-        
         group_timetables[(year, group, major)] = pivot_table
 
     return group_timetables
-

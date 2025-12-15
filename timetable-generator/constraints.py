@@ -65,7 +65,6 @@ def _check_section_conflict(proposed_variable: Variable, proposed_domain: Domain
     if not shared_sections: return False
     return proposed_domain[DOM_TIMESLOT].timeslot_id == existing_domain[DOM_TIMESLOT].timeslot_id
 
-# --- CORRECTED MAJOR-AWARE PROJECT CONFLICT LOGIC ---
 def _check_project_day_conflict(
     proposed_variable: Variable,
     proposed_domain: Domain,
@@ -79,15 +78,13 @@ def _check_project_day_conflict(
     proposed_course = proposed_variable[VAR_COURSE]
     proposed_is_project = proposed_course.type == SessionType.PROJECT
     
-    # Invert the check if the proposed class is not a project
     if not proposed_is_project:
         for existing_variable, existing_domain in assignment.items():
             if existing_variable[VAR_COURSE].type == SessionType.PROJECT:
                 if _check_project_day_conflict(existing_variable, existing_domain, {proposed_variable: proposed_domain}):
-                    return True # Conflict found
+                    return True
         return False
 
-    # Main logic: The proposed class IS a project.
     proposed_year = next(iter(proposed_variable[VAR_SECTIONS])).year
     proposed_day = proposed_domain[DOM_TIMESLOT].day
     proposed_majors = {s.major for s in proposed_variable[VAR_SECTIONS]}
@@ -100,12 +97,10 @@ def _check_project_day_conflict(
         if proposed_year == existing_year and proposed_day == existing_day:
             existing_majors = {s.major for s in existing_variable[VAR_SECTIONS]}
             is_existing_general = Major.GENERAL in existing_majors
-            
-            # Conflict if either is general, as it applies to all majors in the year.
+
             if is_proposed_general or is_existing_general:
                 return True
 
-            # Conflict if they have any specific major in common.
             if not proposed_majors.isdisjoint(existing_majors):
                 return True
 
