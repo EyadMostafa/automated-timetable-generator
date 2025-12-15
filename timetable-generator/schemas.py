@@ -3,6 +3,13 @@ from enum import Enum
 from typing import List, Optional
 from datetime import time
 
+class Major(str, Enum):
+    """Enumeration for the academic majors."""
+    GENERAL = "general"
+    AID = "AID"
+    CNC = "CNC"
+    CSC = "CSC"
+    BIF = "BIF"
 
 class SolverMode(str, Enum):
     """Enumeration for the solver's operational mode."""
@@ -74,6 +81,7 @@ class Section(BaseModel):
     section_id: int = Field(description="Part of the composite primary key. The identifier for the section within its year (1-9).")
     group_number: int = Field(description="The parent group this section belongs to (1-3).")
     year: int = Field(description="Part of the composite primary key. The academic year of the section (1-4).")
+    major: Major = Field(description="The major this section belongs to (e.g., 'general', 'AID').")
     student_count: int = Field(description="The number of students in this section.")
 
     class Config:
@@ -82,6 +90,7 @@ class Section(BaseModel):
 class Curriculum(BaseModel):
     """Links a year to the courses they must take. The primary key is a composite of course_id and year."""
     year: int = Field(description="Part of the composite primary key. The academic year this rule applies to.")
+    major: Major = Field(description="The major this rule applies to ('general' for shared).")
     course_id: str = Field(description="Part of the composite primary key. Foreign key linking to the Course.")
 
 # --- A container model to hold all the loaded data ---
